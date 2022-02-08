@@ -135,6 +135,10 @@ namespace oms
     extern const char* ModelVariables;
     extern const char* ScalarVariable;
     extern const char* ModelStructure;
+    extern const char* Real;
+    extern const char* Integer;
+    extern const char* Boolean;
+    extern const char* String;
   }
 }
 

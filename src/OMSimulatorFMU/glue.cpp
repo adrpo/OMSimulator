@@ -10,8 +10,7 @@
 #include <fstream>
 #include <map>
 
-#include "glue.h"
-
+#include "glue_model.h"
 
 using namespace std;
 

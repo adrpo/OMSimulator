@@ -9,9 +9,6 @@
 /* Standard FMI 2.0 ME and CS types */
 #include <FMI2/fmi2Functions.h>
 
-//#include "test_fmu_1.h"
-#include "glue_model.h"
-
 /* #define MODEL_IDENTIFIER FMU_DUMMY_CS_MODEL_IDENTIFIER */
 
 #include "glue_model.c"

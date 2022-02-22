@@ -2,7 +2,8 @@
 #include <string.h>
 
 #include "glue_model.h"
-#include "glue.h"
+#define OMS_STATIC 1
+#include "OMSimulator.h"
 
 /* Model calculation functions */
 static int calc_initialize(component_ptr_t comp)
@@ -204,24 +205,29 @@ fmi2Component fmi_instantiate(fmi2String instanceName, fmi2Type fmuType,
 {
 	component_ptr_t comp;
 	int k, p;
+	char sspFile[1024];
+	char* cref;
 
 	comp = (component_ptr_t)functions->allocateMemory(1, sizeof(component_t));
-	if (comp == NULL) 
-    {
+	if (comp == NULL) {
 		return NULL;
 	} 
-    else if (strcmp(fmuGUID, FMI_GUID) != 0) 
-    {
-		return NULL;
-	} 
-    else 
-    {	
+  else {	
+    if (strcmp(fmuGUID, FMI_GUID) != 0) {
+		  fprintf(stderr, "FMU XML GUID[%s] != FMU C GUID [%s]\n", fmuGUID, FMI_GUID);
+	  } 
 		sprintf(comp->instanceName, "%s", instanceName);
 		sprintf(comp->GUID, "%s",fmuGUID);
+		fprintf(stderr, "%s/%s", fmuLocation, instanceName); fflush(NULL);
 		comp->functions		= functions;
 		/*comp->functions->allocateMemory = functions->allocateMemory;*/
-		
 		comp->loggingOn		= loggingOn;
+
+		for(int i=8; i < strlen(fmuLocation); i++)
+		   sspFile[i-8] = fmuLocation[i];
+		sspFile[strlen(fmuLocation)-8] = '\0';
+		sprintf(sspFile, "%s/%s", strdup(sspFile), "testOM.ssp");
+    oms_importFile(sspFile, &cref);
 
 		/* Set default values */
 		for (k = 0; k < N_STATES;			k++) comp->states[k]			= 0.0;

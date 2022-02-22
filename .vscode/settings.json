@@ -72,6 +72,7 @@
     "xtree": "cpp",
     "xutility": "cpp",
     "gain_model.h": "c",
-    "fmi2functions.h": "c"
+    "fmi2functions.h": "c",
+    "glue_model_defines.h": "c"
   }
 }

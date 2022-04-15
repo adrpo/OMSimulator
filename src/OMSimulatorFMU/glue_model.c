@@ -228,31 +228,6 @@ fmi2Component fmi_instantiate(fmi2String instanceName, fmi2Type fmuType,
 		sspFile[strlen(fmuLocation)-8] = '\0';
 		sprintf(sspFile, "%s/%s", strdup(sspFile), "testOM.ssp");
     oms_importFile(sspFile, &cref);
-
-		/* Set default values */
-		for (k = 0; k < N_STATES;			k++) comp->states[k]			= 0.0;
-		for (k = 0; k < N_STATES;			k++) comp->states_prev[k]		= 0.0; /* Used in CS only */
-		for (k = 0; k < N_STATES;			k++) comp->states_nom[k]		= 1.0;
-		for (k = 0; k < N_STATES;			k++) comp->states_der[k]		= 0.0;
-		for (k = 0; k < N_EVENT_INDICATORS; k++) comp->event_indicators[k]	= 1e10;
-		for (k = 0; k < N_REAL;				k++) comp->reals[k]				= 0.0;
-		for (k = 0; k < N_INTEGER;			k++) comp->integers[k]			= 0;
-		for (k = 0; k < N_BOOLEAN;			k++) comp->booleans[k]			= fmi2False;
-		for (k = 0; k < N_STRING;			k++) comp->strings[k]			= NULL;
-
-		/* Used in CS only */
-		for (k = 0; k < N_INPUT_REAL; k++) {
-			for (p = 0; p < N_INPUT_REAL_MAX_ORDER + 1; p++) {
-				comp->input_real[k][p] = 0.0;
-			}
-		}
-
-		/* Used in CS only */
-		for (k = 0; k < N_OUTPUT_REAL; k++) {
-			for (p = 0; p < N_OUTPUT_REAL_MAX_ORDER + 1; p++) {
-				comp->output_real[k][p] = MAGIC_TEST_VALUE;
-			}
-		}
 	
 		sprintf(comp->fmuLocation, "%s",fmuLocation);
 		comp->visible		= visible;

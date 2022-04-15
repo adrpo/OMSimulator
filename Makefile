@@ -122,7 +122,7 @@ endif
 
 .PHONY: OMSimulator OMSimulatorCore OMSimulatorFMU config-OMSimulator config-fmil config-lua config-minizip config-cvode config-kinsol config-xerces config-3rdParty distclean testsuite doc doc-html doc-doxygen OMTLMSimulator OMTLMSimulatorClean RegEx pip
 
-OMSimulator: OMSimulatorFMU
+OMSimulator:
 	@echo OS: $(detected_OS)
 	@echo TLM: $(OMTLM)
 	@echo LIBXML2: $(LIBXML2)
@@ -130,6 +130,7 @@ OMSimulator: OMSimulatorFMU
 	@echo
 	@$(MAKE) CC="$(CC)" CXX="$(CXX)" OMTLMSimulator
 	@$(MAKE) OMSimulatorCore
+	@$(MAKE) OMSimulatorFMU
 	test ! -z "$(DISABLE_RUN_OMSIMULATOR_VERSION)" || $(TOP_INSTALL_DIR)/bin/OMSimulator --version
 
 OMSimulatorCore:

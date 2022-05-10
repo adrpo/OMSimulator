@@ -24,7 +24,7 @@ else
 endif
 
 ifeq (MINGW,$(findstring MINGW,$(detected_OS)))
-	EXTRALIBS=-L../../3rdParty/FMIL/install/mingw/lib -lfmilib \
+	EXTRALIBS=-L../../3rdParty/FMIL/install/mingw/lib -lfmilib_shared \
 	-L../../3rdParty/cvode/install/mingw/lib -lsundials_cvode \
 	-L../../3rdParty/kinsol/install/mingw/lib -lsundials_kinsol \
 	-L../../3rdParty/minizip/install/mingw/lib -lminizip \
@@ -32,7 +32,7 @@ ifeq (MINGW,$(findstring MINGW,$(detected_OS)))
 	-lws2_32 -lshlwapi
 endif
 
-LINKFLAGS=-L$(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC) -static-libstdc++ -Wl,-Bstatic -lOMSimulator -Wl,-Bdynamic -L$(TOP_INSTALL_DIR)/bin -lomtlmsimulator $(EXTRALIBS)
+LINKFLAGS=-L$(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC) -lOMSimulator -L$(TOP_INSTALL_DIR)/bin -lomtlmsimulator $(EXTRALIBS)
 COMPFLAGS=-g -I. -I$(TOP_INSTALL_DIR)/include/
 
 all:

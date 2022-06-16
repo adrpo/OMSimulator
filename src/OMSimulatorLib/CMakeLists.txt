@@ -142,6 +142,7 @@ set_target_properties(OMSimulatorLib PROPERTIES OUTPUT_NAME OMSimulator)
 IF (APPLE)
   set_target_properties(OMSimulatorLib PROPERTIES INSTALL_NAME_DIR "@rpath")
 ENDIF ()
+set_target_properties(OMSimulatorLib PROPERTIES COMPILE_DEFINITIONS "FMILIB_STATIC_LIB_ONLY")
 
 # Static library version
 add_library(OMSimulatorLib_static STATIC ${OMSIMULATORLIB_SOURCES})
@@ -150,14 +151,14 @@ IF (WIN32 AND MSVC)
 ELSE ()
   set_target_properties(OMSimulatorLib_static PROPERTIES OUTPUT_NAME OMSimulator)
 ENDIF ()
-set_target_properties(OMSimulatorLib_static PROPERTIES COMPILE_DEFINITIONS "OMS_STATIC")
+set_target_properties(OMSimulatorLib_static PROPERTIES COMPILE_DEFINITIONS "OMS_STATIC;FMILIB_STATIC_LIB_ONLY")
 
 IF (WIN32 AND MSVC)
   add_definitions(-DBOOST_ALL_DYN_LINK)
 ENDIF ()
 
-target_link_libraries(OMSimulatorLib fmilib_shared minizip sundials_kinsol sundials_cvode sundials_nvecserial ${LIB_ATOMIC} ${Boost_LIBRARIES} ${OMTLM_LINKFLAGS} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CPP_FS_LIBS})
-target_link_libraries(OMSimulatorLib_static fmilib_shared minizip sundials_kinsol sundials_cvode sundials_nvecserial lua ${CMAKE_DL_LIBS} ${LIB_ATOMIC} ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES} ${OMTLM_LINKFLAGS} ${CPP_FS_LIBS})
+target_link_libraries(OMSimulatorLib minizip fmilib sundials_kinsol sundials_cvode sundials_nvecserial ${LIB_ATOMIC} ${Boost_LIBRARIES} ${OMTLM_LINKFLAGS} ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT} ${CPP_FS_LIBS})
+target_link_libraries(OMSimulatorLib_static minizip fmilib sundials_kinsol sundials_cvode sundials_nvecserial lua ${CMAKE_DL_LIBS} ${LIB_ATOMIC} ${CMAKE_THREAD_LIBS_INIT} ${Boost_LIBRARIES} ${OMTLM_LINKFLAGS} ${CPP_FS_LIBS})
 
 IF (WIN32 AND MINGW)
   target_link_libraries(OMSimulatorLib shlwapi)

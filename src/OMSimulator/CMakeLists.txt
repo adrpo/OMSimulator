@@ -36,7 +36,7 @@ IF (WIN32 AND MINGW)
   set(CMAKE_EXE_LINKER_FLAGS "-static -static-libgcc -static-libstdc++")
 ENDIF ()
 
-add_definitions(-DOMS_STATIC)
+add_definitions(-DOMS_STATIC -DFMILIB_STATIC_LIB_ONLY)
 target_link_libraries(OMSimulator OMSimulatorLib_static)
 
 install(TARGETS OMSimulator DESTINATION bin)

@@ -36,6 +36,7 @@
 
 /* define OMSimulatorLib_EXPORTS *only* when building the DLL */
 #if defined(OMS_STATIC)
+  #define FMILIB_STATIC_LIB_ONLY
   #define OMSAPI
   #define OMSCALL
 #else

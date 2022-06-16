@@ -24,10 +24,10 @@ else
 endif
 
 ifeq (MINGW,$(findstring MINGW,$(detected_OS)))
-	EXTRALIBS=-L../../3rdParty/FMIL/install/mingw/lib -lfmilib_shared \
+	EXTRALIBS=-L../../3rdParty/FMIL/install/mingw/lib \
 	-L../../3rdParty/cvode/install/mingw/lib -lsundials_cvode \
 	-L../../3rdParty/kinsol/install/mingw/lib -lsundials_kinsol \
-	-L../../3rdParty/minizip/install/mingw/lib -lminizip \
+	-L../../3rdParty/minizip/install/mingw/lib -lminizip -lfmilib \
 	-L../../3rdParty/Lua/install/mingw/ -llua \
 	-lws2_32 -lshlwapi
 endif

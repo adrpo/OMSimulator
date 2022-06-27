@@ -1017,6 +1017,7 @@ oms_status_enu_t oms::Model::exportToFMU(const std::string& filename) const
 
   std::string resourceFile = std::string("resources/") + sspFile;
   oms_copy_file(filesystem::path(getExecutablePath()) / "glue.dll", filesystem::path(binariesDirWin64) / "glue.dll");
+  oms_copy_file(filesystem::path(getExecutablePath()) / "libomtlmsimulator.dll", filesystem::path(binariesDirWin64) / "libomtlmsimulator.dll");
 
   // add the ssp to the resources folder
   std::vector<std::string> resources;
@@ -1026,6 +1027,7 @@ oms_status_enu_t oms::Model::exportToFMU(const std::string& filename) const
   // the resources/Model.ssp is already there
   resources.push_back(resourceFile);
   resources.push_back("binaries/win64/glue.dll");
+  resources.push_back("binaries/win64/libomtlmsimulator.dll");
   resources.push_back("sources/glue.c");
 
   std::string cd = Scope::GetInstance().getWorkingDirectory();

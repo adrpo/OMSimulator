@@ -81,6 +81,7 @@ typedef struct {
 	fmi2Real					output_real		[N_OUTPUT_REAL][N_OUTPUT_REAL_MAX_ORDER + 1];
 
 	char sspFile[BUFFER];
+	char cref[BUFFER];
 
 } component_t;
 

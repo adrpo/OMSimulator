@@ -31,8 +31,8 @@ oms_setStopTime("testOM", 1)
 oms_setTolerance("testOM.root", 1e-6, 1e-6);
 oms_setFixedStepSize("testOM.root", 1e-6)
 
--- oms_export("testOM", "testOM.ssp")
 oms_export_fmu("testOM", "testOM.fmu")
+-- oms_export("testOM", "testOM.ssp")
 
 -- Set start values
 --oms_instantiate("testOM")

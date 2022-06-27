@@ -4,6 +4,82 @@
 #include "glue_model.h"
 #define OMS_STATIC 1
 #include "OMSimulator.h"
+#include <fmilib.h>
+
+
+typedef struct {
+  jm_callbacks callbacks;
+  fmi2_callback_functions_t callbackFunctions;
+  fmi_import_context_t* context;
+  fmi2_import_t* fmu;
+
+} fmilibcomp_t;
+
+typedef fmilibcomp_t* fmilibcomp_ptr_t;
+
+void oms_fmiLogger(jm_callbacks* c, jm_string module, jm_log_level_enu_t log_level, jm_string message)
+{
+  switch (log_level)
+  {
+  case jm_log_level_info:    // Informative messages
+    //logDebug("module " + std::string(module) + ": " + std::string(message));
+    break;
+  case jm_log_level_warning: // Non-critical issues
+    //logWarning("module " + std::string(module) + ": " + std::string(message));
+    break;
+  case jm_log_level_error:   // Errors that may be not critical for some FMUs
+  case jm_log_level_fatal:   // Unrecoverable errors
+    //logError("module " + std::string(module) + ": " + std::string(message));
+    break;
+  case jm_log_level_verbose: // Verbose messages
+  case jm_log_level_debug:   // Debug messages. Only enabled if library is configured with FMILIB_ENABLE_LOG_LEVEL_DEBUG
+    //logDebug("[log level " + std::string(jm_log_level_to_string(log_level)) + "] module " + std::string(module) + ": " + std::string(message));
+  }
+}
+
+void oms_fmi2logger(fmi2_component_environment_t env, fmi2_string_t instanceName, fmi2_status_t status, fmi2_string_t category, fmi2_string_t message, ...)
+{
+  if ((status == fmi2_status_ok || status == fmi2_status_pending))
+  {
+    // When frequently called for debug logging during simulation, avoid costly formatting.
+    return;
+  }
+
+  int len;
+  char msg[1000];
+  va_list argp;
+  va_start(argp, message);
+  len = vsnprintf(msg, 1000, message, argp);
+
+  switch (status)
+  {
+  case fmi2_status_ok:
+  case fmi2_status_pending:
+    //logDebug(std::string(instanceName) + " (" + category + "): " + msg);
+    break;
+  case fmi2_status_warning:
+    //logWarning(std::string(instanceName) + " (" + category + "): " + msg);
+    break;
+  case fmi2_status_discard:
+  case fmi2_status_error:
+  case fmi2_status_fatal:
+    //logError(std::string(instanceName) + " (" + category + "): " + msg);
+    break;
+  default:
+    //logWarning("fmiStatus = " + std::string(fmi2_status_to_string(status)) + "; " + instanceName + " (" + category + "): " + msg);
+  }
+}
+
+void parseXML(fmilibcomp_ptr_t fc, fmi2String fmuLocation) {
+	fc->callbacks.malloc = malloc;
+	fc->callbacks.calloc = calloc;
+	fc->callbacks.realloc = realloc;
+	fc->callbacks.free = free;
+	fc->callbacks.logger = oms_fmiLogger;
+	fc->callbacks.log_level = jm_log_level_all;
+	fc->callbacks.context = 0;
+}
+
 
 /* Model calculation functions */
 static int calc_initialize(component_ptr_t comp)
@@ -207,32 +283,42 @@ fmi2Component fmi_instantiate(fmi2String instanceName, fmi2Type fmuType,
 	int k, p;
 	char sspFile[1024];
 	char* cref;
+	fmilibcomp_ptr_t fmilibcomp;
+
+  fmilibcomp = (fmilibcomp_ptr_t)functions->allocateMemory(1, sizeof(fmilibcomp_t));
+	if (fmilibcomp == NULL) {
+		return NULL;
+	} 
 
 	comp = (component_ptr_t)functions->allocateMemory(1, sizeof(component_t));
 	if (comp == NULL) {
 		return NULL;
 	} 
-  else {	
-    if (strcmp(fmuGUID, FMI_GUID) != 0) {
-		  fprintf(stderr, "FMU XML GUID[%s] != FMU C GUID [%s]\n", fmuGUID, FMI_GUID);
-	  } 
-		sprintf(comp->instanceName, "%s", instanceName);
-		sprintf(comp->GUID, "%s",fmuGUID);
-		fprintf(stderr, "%s/%s", fmuLocation, instanceName); fflush(NULL);
-		comp->functions		= functions;
-		/*comp->functions->allocateMemory = functions->allocateMemory;*/
-		comp->loggingOn		= loggingOn;
 
-		for(int i=8; i < strlen(fmuLocation); i++)
-		   sspFile[i-8] = fmuLocation[i];
-		sspFile[strlen(fmuLocation)-8] = '\0';
-		sprintf(sspFile, "%s/%s", strdup(sspFile), "testOM.ssp");
-    oms_importFile(sspFile, &cref);
-	
-		sprintf(comp->fmuLocation, "%s",fmuLocation);
-		comp->visible		= visible;
-		return comp;
-	}
+	if (strcmp(fmuGUID, FMI_GUID) != 0) {
+		fprintf(stderr, "FMU XML GUID[%s] != FMU C GUID [%s]\n", fmuGUID, FMI_GUID);
+	} 
+	sprintf(comp->instanceName, "%s", instanceName);
+	sprintf(comp->GUID, "%s", fmuGUID);
+	fprintf(stderr, "%s/%s\n", fmuLocation, instanceName); fflush(NULL);
+	comp->functions		= functions;
+	/*comp->functions->allocateMemory = functions->allocateMemory;*/
+	comp->loggingOn		= loggingOn;
+
+	for(int i=8; i < strlen(fmuLocation); i++)
+			sspFile[i-8] = fmuLocation[i];
+	sspFile[strlen(fmuLocation)-8] = '\0';
+	sprintf(sspFile, "%s/%s.%s", strdup(sspFile), instanceName, ".ssp");
+	oms_importFile(sspFile, &cref);
+	sprintf(comp->cref, "%s", cref);
+
+	sprintf(comp->fmuLocation, "%s", fmuLocation);
+	comp->visible		= visible;
+
+	// parse the XML file
+	parseXML(fmilibcomp, fmuLocation);
+
+	return comp;
 }
 
 void fmi_free_instance(fmi2Component c)

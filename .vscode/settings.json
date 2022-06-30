@@ -73,7 +73,10 @@
     "xutility": "cpp",
     "gain_model.h": "c",
     "fmi2functions.h": "c",
-    "glue_model_defines.h": "c"
+    "glue_model_defines.h": "c",
+    "string.h": "c",
+    "glue_model.h": "c",
+    "fmi2typesplatform.h": "c"
   },
   "cmake.configureOnOpen": false
 }

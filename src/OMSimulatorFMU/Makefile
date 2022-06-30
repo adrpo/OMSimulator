@@ -33,7 +33,7 @@ ifeq (MINGW,$(findstring MINGW,$(detected_OS)))
 endif
 
 LINKFLAGS=-L$(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC) -lOMSimulator -L$(TOP_INSTALL_DIR)/bin $(TOP_INSTALL_DIR)/bin/libomtlmsimulator.dll $(EXTRALIBS)
-COMPFLAGS=-g -I. -I$(TOP_INSTALL_DIR)/include/ -static -static-libgcc -static-libstdc++
+COMPFLAGS=-g -I. -I$(TOP_INSTALL_DIR)/include/ -I../../3rdParty/FMIL/install/mingw/include -static -static-libgcc -static-libstdc++
 
 all:
 	g++ $(COMPFLAGS) -shared -o glue$(FEXT) glue.cpp glue_model_cs.c $(LINKFLAGS)

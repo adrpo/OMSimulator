@@ -1,6 +1,7 @@
 #ifndef FMU2_MODEL_H_
 #define FMU2_MODEL_H_
 #include <FMI2/fmi2Functions.h>
+#include <FMI2/fmi2TypesPlatform.h>
 
 /* This header is used to generate the FMU test DLL and in the C API test that uses the DLL */
 #ifndef FMU2_MODEL_DEFINES_H_

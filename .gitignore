@@ -13,3 +13,7 @@
 /OMSimulator.includes
 
 /issues/
+
+*.dll
+*.so
+

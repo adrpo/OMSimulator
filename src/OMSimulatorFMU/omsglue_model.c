@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "glue_model.h"
+#include "omsglue_model.h"
 #define OMS_STATIC 1
 #include "OMSimulator.h"
 
@@ -228,7 +228,7 @@ fmi2Component fmi_instantiate(fmi2String instanceName, fmi2Type fmuType,
   for(int i=8; i < strlen(fmuLocation); i++)
       sspFile[i-8] = fmuLocation[i];
   sspFile[strlen(fmuLocation)-8] = '\0';
-  sprintf(sspFile, "%s/%s.%s", strdup(sspFile), instanceName, ".ssp");
+  sprintf(sspFile, "%s/%s.%s", strdup(sspFile), instanceName, "ssp");
   oms_importFile(sspFile, &cref);
   sprintf(comp->cref, "%s", cref);
 
@@ -667,9 +667,43 @@ void oms_fmi2logger(fmi2_component_environment_t env, fmi2_string_t instanceName
   }
 }
 
+#define URI_FILE_PREFIX "file:///"
+#define URI_FILE_SUFFIX "resources"
+
+fmi2String parseModeDescriptionPath(component_ptr_t comp, fmi2String fmuLocation) {
+  // parse path from fmuLocation
+  // file:///c:/path/to/resources
+  // file:///path/to/resources
+  char* s = (char*)comp->functions->allocateMemory(sizeof(char), strlen(fmuLocation)+1), *tmp = NULL;
+  char* path = NULL;
+  int pindx = strlen(URI_FILE_PREFIX), sindx = strlen(URI_FILE_SUFFIX), extra;
+  strcpy(s, fmuLocation);
+  // save pointer
+  tmp = s;
+  if (strncmp(s, URI_FILE_PREFIX, pindx) == 0) {
+    // check if we have a windows drive
+    if (s[pindx+1] == ':') {
+      s = s + pindx;
+    }
+    else { // Linux
+      s = s + pindx-1;
+    }
+  }
+  extra = ((s[strlen(s)]=='/')?1:0);
+  // remove /resources
+  if (strncmp(s + (strlen(s) - sindx - extra), URI_FILE_SUFFIX, sindx) == 0) {
+    s[(strlen(s) - sindx - extra - 1)] = '\0';
+  }
+  path = (char*)comp->functions->allocateMemory(sizeof(char), strlen(s)+1);
+  strcpy(path, s);
+  comp->functions->freeMemory(tmp);
+  return (fmi2String)path;
+}
+
 int parseXML(component_ptr_t comp, fmi2String fmuLocation) {
 
   fmilibcomp_ptr_t fc;
+  fmi2String modelDescriptionPath = parseModeDescriptionPath(comp, fmuLocation);
 
   fc = (fmilibcomp_ptr_t)comp->functions->allocateMemory(1, sizeof(fmilibcomp_t));
   if (fc == NULL) {
@@ -685,9 +719,14 @@ int parseXML(component_ptr_t comp, fmi2String fmuLocation) {
   fc->callbacks.context = 0;
 
   fc->context = fmi_import_allocate_context(&fc->callbacks);
-  fc->fmu = fmi2_import_parse_xml(fc->context, fmuLocation, 0);
+  fc->fmu = fmi2_import_parse_xml(fc->context, modelDescriptionPath, 0);
 
   // create a list of all variables
+  if (fc->fmu == NULL) {
+    return 1;
+  }
+
+/*
   {
     fmi2_import_variable_list_t *varList = fmi2_import_get_variable_list(fc->fmu, 0);
     size_t varListSize = fmi2_import_get_variable_list_size(varList);
@@ -696,6 +735,6 @@ int parseXML(component_ptr_t comp, fmi2String fmuLocation) {
       fmi2_import_variable_t* var = fmi2_import_get_variable(varList, i);
     }
   }
-
+*/
   return 0;
 }

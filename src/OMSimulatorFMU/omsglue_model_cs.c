@@ -11,7 +11,7 @@
 
 /* #define MODEL_IDENTIFIER FMU_DUMMY_CS_MODEL_IDENTIFIER */
 
-#include "glue_model.c"
+#include "omsglue_model.c"
 
 
 

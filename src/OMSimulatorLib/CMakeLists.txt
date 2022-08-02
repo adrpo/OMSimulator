@@ -1,5 +1,8 @@
 project(OMSimulatorLib)
 
+# adrpo: force -fPIC even for the static library as we would like to link it into shared libraries!
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 find_package(Threads)
 
 if (ASAN)

@@ -130,7 +130,7 @@ OMSimulator:
 	@echo
 	@$(MAKE) CC="$(CC)" CXX="$(CXX)" OMTLMSimulator
 	@$(MAKE) OMSimulatorCore
-	@$(MAKE) OMSimulatorFMU
+	# @$(MAKE) OMSimulatorFMU
 	test ! -z "$(DISABLE_RUN_OMSIMULATOR_VERSION)" || $(TOP_INSTALL_DIR)/bin/OMSimulator --version
 
 OMSimulatorCore:
@@ -158,8 +158,14 @@ OMSimulatorFMU:
 	$(MAKE) -C src/OMSimulatorFMU
 	@$(MKDIR) $(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC)
 	@$(MKDIR) $(TOP_INSTALL_DIR)/bin
-	cp src/OMSimulatorFMU/glue$(FEXT) $(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC)
-	cp src/OMSimulatorFMU/glue$(FEXT) $(TOP_INSTALL_DIR)/bin
+	cp src/OMSimulatorFMU/omsglue$(FEXT) $(TOP_INSTALL_DIR)/lib/$(HOST_SHORT_OMC)
+ifeq (MINGW,$(findstring MINGW,$(detected_OS)))
+	cp src/OMSimulatorFMU/omsglue$(FEXT) $(TOP_INSTALL_DIR)/bin
+	cd test &&  ../install/mingw/bin/OMSimulator test_OM.lua
+endif
+ifeq (Linux,$(findstring Linux,$(detected_OS)))
+	cd test &&  ../install/linux/bin/OMSimulator test_OM.lua
+endif
 
 ifeq ($(OMTLM),ON)
 OMTLMSimulator: RegEx

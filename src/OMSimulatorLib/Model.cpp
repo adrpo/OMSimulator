@@ -44,7 +44,8 @@
 #include <minizip.h>
 #include <thread>
 
-std::string getExecutablePath(void);
+std::string getLibraryPath(void);
+filesystem::path getDestinationPath(oms::Model *m);
 
 oms::Model::Model(const oms::ComRef& cref, const std::string& tempDir)
   : cref(cref), tempDir(tempDir), resultFilename(std::string(cref) + "_res.mat")
@@ -936,6 +937,21 @@ oms_status_enu_t oms::Model::exportToFile(const std::string& filename) const
   return oms_status_ok;
 }
 
+#define FMU_NAME "omsglue"
+
+#if defined(_WIN32)
+#define FMU_EXT ".dll"
+#elif defined(__linux__)
+#define FMU_EXT ".so"
+#elif defined(__APPLE__)
+#define FMU_EXT ".dylib"
+#else /* assume Linux! */
+#define FMU_EXT ".so"
+#endif
+
+#define FMU_FILE FMU_NAME FMU_EXT
+#define TLMDEP_FILE "libomtlmsimulator" FMU_EXT
+
 oms_status_enu_t oms::Model::exportToFMU(const std::string& filename) const
 {
   Snapshot snapshot;
@@ -952,32 +968,28 @@ oms_status_enu_t oms::Model::exportToFMU(const std::string& filename) const
   oms::ComRef newCref(sref.c_str());
   Model *m = NewModel(newCref);
 
-  std::string binariesDir = m->getTempDirectory() + "/binaries";
-  std::string binariesDirWin32 = m->getTempDirectory() + "/binaries/win32";
-  std::string binariesDirWin64 = m->getTempDirectory() + "/binaries/win64";
-  std::string binariesDirLin32 = m->getTempDirectory() + "/binaries/linux32";
-  std::string binariesDirLin64 = m->getTempDirectory() + "/binaries/linux64";
-
   std::string sourcesDir = m->getTempDirectory() + "/sources";
 
-  if (!filesystem::create_directory(binariesDir) ||
-      !filesystem::create_directory(binariesDirWin32) ||
-      !filesystem::create_directory(binariesDirWin64) ||
-      !filesystem::create_directory(binariesDirLin32) ||
-      !filesystem::create_directory(binariesDirLin64)
-      )
+  std::string binariesDirStr = m->getTempDirectory() + "/binaries";
+  filesystem::path binariesDir(binariesDirStr);
+
+  // create the binaries/ directory
+  if (!filesystem::create_directory(binariesDir))
   {
-    return logError("Failed to create binaries/ directory for the model \"" + std::string(newCref) + "\"");
-  }
-  if (!filesystem::create_directory(sourcesDir))
-  {
-    return logError("Failed to create sources/ directory for the model \"" + std::string(newCref) + "\"");
+    return logError("Failed to create " + binariesDir.generic_string() + " directory for the model \"" + std::string(newCref) + "\"");
   }
 
-  std::ofstream glue;
-  glue.open (filesystem::path(sourcesDir) / "glue.c");
-  glue << "/* dummy */" << std::endl;
-  glue.close();
+  // create the binaries/arch directory
+  binariesDir = getDestinationPath(m);
+  if (!filesystem::create_directory(binariesDir))
+  {
+    return logError("Failed to create " + binariesDir.generic_string() + " directory for the model \"" + std::string(newCref) + "\"");
+  }
+  
+  if (!filesystem::create_directory(sourcesDir))
+  {
+    return logError("Failed to create " + sourcesDir + " directory for the model \"" + std::string(newCref) + "\"");
+  }
 
   std::string fn = filename.substr(0, filename.length() - 4);
   std::string sspFile = fn + ".ssp";
@@ -992,7 +1004,7 @@ oms_status_enu_t oms::Model::exportToFMU(const std::string& filename) const
 
   pugi::xml_node xmlNode = snapshot.getModelDescriptionNode("modelDescription.xml", m->getCref());
   pugi::xml_node coSimulationNode = xmlNode.append_child(oms::fmu::CoSimulation);
-  coSimulationNode.append_attribute("modelIdentifier") = "glue";
+  coSimulationNode.append_attribute("modelIdentifier") = FMU_NAME;
   coSimulationNode.append_attribute("needsExecutionTool") = "false";
   coSimulationNode.append_attribute("canInterpolateInputs") = "false";
   coSimulationNode.append_attribute("maxOutputDerivativeOrder") = "1";
@@ -1016,8 +1028,10 @@ oms_status_enu_t oms::Model::exportToFMU(const std::string& filename) const
   }
 
   std::string resourceFile = std::string("resources/") + sspFile;
-  oms_copy_file(filesystem::path(getExecutablePath()) / "glue.dll", filesystem::path(binariesDirWin64) / "glue.dll");
-  oms_copy_file(filesystem::path(getExecutablePath()) / "libomtlmsimulator.dll", filesystem::path(binariesDirWin64) / "libomtlmsimulator.dll");
+  
+  oms_copy_file(filesystem::path(getLibraryPath()) / FMU_FILE, binariesDir / FMU_FILE);
+  // copy the TLM lib as well
+  oms_copy_file(filesystem::path(getLibraryPath()) / TLMDEP_FILE, binariesDir / TLMDEP_FILE);
 
   // add the ssp to the resources folder
   std::vector<std::string> resources;
@@ -1026,10 +1040,11 @@ oms_status_enu_t oms::Model::exportToFMU(const std::string& filename) const
   writeFMUResourcesToFilesystem(resources, snapshot, m->getTempDirectory());
   // the resources/Model.ssp is already there
   resources.push_back(resourceFile);
-  resources.push_back("binaries/win64/glue.dll");
-  resources.push_back("binaries/win64/libomtlmsimulator.dll");
-  resources.push_back("sources/glue.c");
-
+  // remove the temp directory to get just the suffix
+  std::string binaries = binariesDir.generic_string().erase(0, m->getTempDirectory().length() + 1);
+  resources.push_back(binaries + "/" + FMU_FILE);
+  resources.push_back(binaries + "/" + TLMDEP_FILE);
+  
   std::string cd = Scope::GetInstance().getWorkingDirectory();
   Scope::GetInstance().setWorkingDirectory(m->getTempDirectory());
   int argc = 4 + resources.size();
@@ -1512,11 +1527,19 @@ void oms::Model::writeFMUResourcesToFilesystem(std::vector<std::string>& resourc
   }
 }
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <windows.h>
+#else
+#include <unistd.h> // readlink
+#endif
 
-std::string getExecutablePath(void)
+// return the path to the omsglue.dll|so|dylib
+// note that we assume we run OMSimulator so on Windows we use that path
+// and on Linux we use executablepath/../lib (TODO configure this via a parameter to oms_export_fmu)
+std::string getLibraryPath(void)
 {
-  std::vector<char> pathBuf; 
+#if _WIN32
+  std::vector<char> pathBuf;
   DWORD copied = 0;
   do {
     pathBuf.resize(pathBuf.size() + MAX_PATH);
@@ -1528,4 +1551,53 @@ std::string getExecutablePath(void)
   std::string path(pathBuf.begin(),pathBuf.end());
   path = path.substr(0, path.size() - 15);
   return strdup(path.c_str());
+#else
+  std::string s("/lib/");
+  char buf[2048];
+  if (readlink("/proc/self/exe", buf, 2047) < 0) {
+    return s;
+  }
+  else {
+    filesystem::path p(buf), pp;
+    pp = p.parent_path() / ".." / "lib";
+    return pp.generic_string();
+  }
+
+#endif
+}
+
+filesystem::path getDestinationPath(oms::Model *m) {
+  std::string binariesDirWin32 = m->getTempDirectory() + "/binaries/win32";
+  std::string binariesDirWin64 = m->getTempDirectory() + "/binaries/win64";
+  std::string binariesDirLin32 = m->getTempDirectory() + "/binaries/linux32";
+  std::string binariesDirLin64 = m->getTempDirectory() + "/binaries/linux64";
+  std::string binariesDirMac32 = m->getTempDirectory() + "/binaries/darwin32";
+  std::string binariesDirMac64 = m->getTempDirectory() + "/binaries/darwin64";
+  filesystem::path dest;
+#if defined(_WIN32)
+
+#if defined(_LP64)
+  dest = filesystem::path(binariesDirWin64);
+#else
+  dest = filesystem::path(binariesDirWin32);
+#endif
+
+#elif defined(__linux__)
+
+#if defined(_LP64)
+  dest = filesystem::path(binariesDirLin64);
+#else
+  dest = filesystem::path(binariesDirLin32);
+#endif
+
+#elif defined(__APPLE__)
+#if defined(__LP64__) || defined(_LP64)
+  dest = filesystem::path(binariesDirMac64);
+#else
+  dest = filesystem::path(binariesDirMac32);
+#endif
+
+#endif
+
+  return dest;
 }

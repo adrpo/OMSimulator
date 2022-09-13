@@ -54,13 +54,12 @@ fmi2Status fmi_set_debug_logging(fmi2Component c, fmi2Boolean loggingOn)
 fmi2Status fmi_get_real(fmi2Component c, const fmi2ValueReference vr[], size_t nvr, fmi2Real value[])
 {
   component_ptr_t comp = (component_ptr_t)c;
-  if (comp == NULL) 
-    {
+  if (comp == NULL) {
     return fmi2Fatal;
   } 
-    else 
-    {
-        size_t i;
+  else 
+  {
+    size_t i;
         for(i=0; i<nvr; ++i)
         {
             value[i] = getReal(vr[i]);
@@ -483,8 +482,7 @@ fmi2Status fmi_get_real_output_derivatives(fmi2Component c, const fmi2ValueRefer
   component_ptr_t comp  = (component_ptr_t)c;
   size_t k;
 
-  for (k = 0; k < nvr; k++) 
-    {
+  for (k = 0; k < nvr; k++) {
     value[k] = comp->output_real[vr[k]][order[k]];
   }
 
@@ -500,12 +498,11 @@ fmi2Status fmi_do_step(fmi2Component c, fmi2Real currentCommunicationPoint, fmi2
 {
   component_ptr_t comp  = (component_ptr_t)c;
 
-  if (comp == NULL) 
-    {
+  if (comp == NULL) {
     return fmi2Fatal;
   } 
-    else 
-    {
+  else 
+  {
     fmi2Real tstart = currentCommunicationPoint;
     fmi2Real tcur;
     fmi2Real tend = currentCommunicationPoint + communicationStepSize;
@@ -544,8 +541,7 @@ fmi2Status fmi_do_step(fmi2Component c, fmi2Real currentCommunicationPoint, fmi2
 
 fmi2Status fmi_get_status(fmi2Component c, const fmi2StatusKind s, fmi2Status*  value)
 {
-  switch (s) 
-    {
+  switch (s) {
     case fmi2DoStepStatus:
       /* Return fmiPending if we are waiting. Otherwise the result from fmiDoStep */
       *value = fmi2OK;
@@ -557,8 +553,7 @@ fmi2Status fmi_get_status(fmi2Component c, const fmi2StatusKind s, fmi2Status*  
 
 fmi2Status fmi_get_real_status(fmi2Component c, const fmi2StatusKind s, fmi2Real*    value)
 {
-  switch (s) 
-    {
+  switch (s) {
     case fmi2LastSuccessfulTime:
       /* Return fmiPending if we are waiting. Otherwise return end time for last call to fmiDoStep */
       *value = 0.01;
@@ -570,8 +565,7 @@ fmi2Status fmi_get_real_status(fmi2Component c, const fmi2StatusKind s, fmi2Real
 
 fmi2Status fmi_get_integer_status(fmi2Component c, const fmi2StatusKind s, fmi2Integer* value)
 {
-  switch (s) 
-    {
+  switch (s) {
     default: /* Not defined for status for this function */
       return fmi2Discard;
   }
@@ -579,8 +573,7 @@ fmi2Status fmi_get_integer_status(fmi2Component c, const fmi2StatusKind s, fmi2I
 
 fmi2Status fmi_get_boolean_status(fmi2Component c, const fmi2StatusKind s, fmi2Boolean* value)
 {
-  switch (s) 
-    {
+  switch (s) {
     default: /* Not defined for status for this function */
       return fmi2Discard;
   }
@@ -588,8 +581,7 @@ fmi2Status fmi_get_boolean_status(fmi2Component c, const fmi2StatusKind s, fmi2B
 
 fmi2Status fmi_get_string_status(fmi2Component c, const fmi2StatusKind s, fmi2String*  value)
 {
-  switch (s) 
-    {
+  switch (s) {
     case fmi2PendingStatus:
       *value = "Did fmi2DoStep really return with fmi2Pending? Then its time to implement this function";
       return fmi2Discard;
@@ -597,8 +589,6 @@ fmi2Status fmi_get_string_status(fmi2Component c, const fmi2StatusKind s, fmi2St
       return fmi2Discard;
   }
 }
-
-
 
 
 #include <fmilib.h>
@@ -629,8 +619,8 @@ void oms_fmiLogger(jm_callbacks* c, jm_string module, jm_log_level_enu_t log_lev
   case jm_log_level_verbose: // Verbose messages
   case jm_log_level_debug:   // Debug messages. Only enabled if library is configured with FMILIB_ENABLE_LOG_LEVEL_DEBUG
     //logDebug("[log level " + std::string(jm_log_level_to_string(log_level)) + "] module " + std::string(module) + ": " + std::string(message));
-		break;
-	}
+    break;
+  }
 }
 
 void oms_fmi2logger(fmi2_component_environment_t env, fmi2_string_t instanceName, fmi2_status_t status, fmi2_string_t category, fmi2_string_t message, ...)
@@ -663,7 +653,7 @@ void oms_fmi2logger(fmi2_component_environment_t env, fmi2_string_t instanceName
     break;
   default:
     //logWarning("fmiStatus = " + std::string(fmi2_status_to_string(status)) + "; " + instanceName + " (" + category + "): " + msg);
-		break;
+    break;
   }
 }
 

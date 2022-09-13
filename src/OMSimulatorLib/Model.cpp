@@ -1007,7 +1007,7 @@ oms_status_enu_t oms::Model::exportToFMU(const std::string& filename) const
   coSimulationNode.append_attribute("modelIdentifier") = FMU_NAME;
   coSimulationNode.append_attribute("needsExecutionTool") = "false";
   coSimulationNode.append_attribute("canInterpolateInputs") = "false";
-  coSimulationNode.append_attribute("maxOutputDerivativeOrder") = "1";
+  coSimulationNode.append_attribute("maxOutputDerivativeOrder") = "0";
   coSimulationNode.append_attribute("canRunAsynchronuously") = "false";
   coSimulationNode.append_attribute("canBeInstantiatedOnlyOncePerProcess") = "false";
   coSimulationNode.append_attribute("canNotUseMemoryManagementFunctions") = "false";

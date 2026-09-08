@@ -65,6 +65,7 @@ set(OMSIMULATORLIB_SOURCES
       Flags.cpp
       FMUInfo.cpp
       Logging.cpp
+      LsDae.cpp
       MatReader.cpp
       MatVer4.cpp
       MATWriter.cpp
